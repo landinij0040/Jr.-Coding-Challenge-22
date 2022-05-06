@@ -8,7 +8,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 import javafx.scene.control.cell.PropertyValueFactory;
 
@@ -17,12 +20,14 @@ import javafx.stage.Stage;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 
-// Using Big Decimal for money
-import java.math.BigDecimal;
+// Using Big Decimal for money 
+import java.math.BigDecimal; // TODO: Delete probably
 import java.nio.file.FileAlreadyExistsException;
 
-// Used Read the JSON file
+// Used to Read the JSON file
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -35,12 +40,21 @@ import org.json.simple.parser.ParseException;
 import java.util.*;
 
 public class AppFX extends Application {
-
+    
     @Override
     public void start(Stage stage) {
         // Setting up the label for the vending machine
         Label label = new Label("Vending Machine");
         label.setFont(new Font("Arial",20));
+        // Setting up the prompt label
+        Label prompt = new Label("Welcome Enter Your Selection");
+        prompt.setFont(new Font("Arial",20));
+        
+
+        
+        
+        final HBox promptHBox = new HBox();
+        promptHBox.getChildren().addAll(prompt);
         // Getting the JSON
         JSONObject json = readJSONConfig("src\\main\\java\\com\\mycompany\\app\\input.json");
         JSONObject config = (JSONObject)json.get("config");
@@ -93,19 +107,62 @@ public class AppFX extends Application {
             }
             table.getItems().add(currentRow);
 
-            //TODO: I dont think I need the below
-            // for(int i = 0; i < columns; i++){
-            //     currentRow.add("");
-            // }
-            // table.getItems().add(currentRow);
         }    
-        // table.getItems().add(FXCollections.observableArrayList("1","2","3","4","5","6","7","8")); // TODO: Delete Later
-        // Setting up the viewbox
+        // Setting up the selction options
+        final HBox hb = new HBox();
+        final TextField itemRow = new TextField();
+        itemRow.setPromptText("Row");
+        final TextField itemColumn = new TextField();
+        itemColumn.setPromptText("Column");
+        final TextField payment = new TextField();
+        payment.setPromptText("Payment");
+
+        final Button btn = new Button("Add");
+        btn.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent e){
+                System.out.println(itemRow.getText());
+                System.out.println(itemColumn.getText());
+                System.out.println(payment.getText());
+                // prompt.setOnInputMethodTextChanged(arg0);
+                // prompt.applyCss("color: red;");
+
+                System.out.println();
+                prompt.setText("Switch");
+                itemRow.clear();
+                itemColumn.clear();
+                payment.clear();
+            }
+        });
+        hb.getChildren().addAll(itemRow, itemColumn, payment,btn);
+
+    
+        // Setting up the loading options
+        final HBox loadingHBoxLabel = new HBox();
+        Label loading = new Label("Enter new Item");
+        loading.setFont(new Font("Arial",20));
+        loadingHBoxLabel.getChildren().addAll(loading);
+        final HBox loadingHBox = new HBox();
+        final TextField itemName = new TextField();
+        itemName.setPromptText("New Item Name");
+        final TextField itemAmount = new TextField();
+        itemAmount.setPromptText("New Item Amount");
+        final TextField itemPrice = new TextField();
+        itemPrice.setPromptText("New Price");
+        loadingHBox.getChildren().addAll(itemName, itemAmount, itemPrice);
+        
+        
+    
+
+        
+        
+        // Setting up the button
+        
+        // Setting up the Vbox
         VBox vbox = new VBox();
         // vbox.setSpacing(5);
         // vbox.setPadding(new Insets(10,0,0,10));
-        vbox.getChildren().addAll(label, table);
-        // Scene scene = new Scene(new StackPane(l), 640, 480);
+        vbox.getChildren().addAll(label, table, promptHBox,hb, loadingHBoxLabel,loadingHBox);
         Scene scene = new Scene(new Group());
         // TODO make the style sheet work lol
         // Adding the styling sheet
@@ -124,6 +181,11 @@ public class AppFX extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    public static addItem(){
+        // Update the ArrayList
+        // Update the Json
     }
 
     public static JSONObject readJSONConfig(String jsonPath){ 
@@ -146,36 +208,6 @@ public class AppFX extends Application {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static class Item{
-        private String name;
-        private int amount;
-        private BigDecimal price;
-        
-        public String getName(){
-            return this.name;
-        }
-
-        public void setName(String name){
-            this.name = name;
-        }
-
-        public int getAmount(){
-            return amount;
-        }
-
-        public void setAmount(int amount){
-            this.amount = amount;
-        }
-
-        public BigDecimal getPrice(){
-            return this.price;
-        }
-
-        public void setPrice(BigDecimal price){
-            this.price = price;
-        }
     }
 }
 
