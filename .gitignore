@@ -1,2 +1,5 @@
+*.lst
 *.jar
 *.class
+*.lst
+src/main/com/mycompany/app/DynamicTableView.java
