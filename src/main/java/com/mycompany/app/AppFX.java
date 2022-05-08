@@ -23,8 +23,6 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
-// Using Big Decimal for money 
-import java.math.BigDecimal; // TODO: Delete probably
 import java.nio.file.FileAlreadyExistsException;
 
 // Used to Read the JSON file
@@ -42,6 +40,9 @@ import org.json.simple.parser.ParseException;
 import java.util.*;
 
 public class AppFX extends Application {
+
+    static Long rows;
+    static int columns;
     static ArrayList<ObservableList<String>> allItems = new ArrayList<ObservableList<String>>();
     static Label loading = new Label("Enter new Item");
     // For making a prompt
@@ -54,23 +55,24 @@ public class AppFX extends Application {
     static Label paymentLabel = new Label();
     static final TextField payment = new TextField();
     static final Button btn2 = new Button("Select");
-
     static VBox vbox = new VBox();
-    
+    static JSONObject currentObject;
     
     // For making a new item
     static final TextField itemName = new TextField();
     static final TextField itemPrice = new TextField();
     static final TextField itemAmount = new TextField();
     static JSONObject json = readJSONConfig("src\\main\\java\\com\\mycompany\\app\\input.json");
+    static JSONArray items;
 
+    static Label prompt;
     @Override
     public void start(Stage stage) {
         // Setting up the label for the vending machine
         Label label = new Label("Vending Machine");
         label.setFont(new Font("Arial",20));
         // Setting up the prompt label
-        Label prompt = new Label("Welcome Enter Your Selection");
+        prompt = new Label("Welcome Enter Your Selection");
         prompt.setFont(new Font("Arial",20));
     
         final HBox promptHBox = new HBox();
@@ -78,10 +80,10 @@ public class AppFX extends Application {
         // Getting the JSON
         
         JSONObject config = (JSONObject)json.get("config");
-        JSONArray items = (JSONArray)json.get("items");
+        items = (JSONArray)json.get("items");
         int itemsAmount = items.size();
-        int columns = Integer.parseInt((String)config.get("columns"));
-        long rows = (long) config.get("rows");
+        columns = Integer.parseInt((String)config.get("columns"));
+        rows = (long) config.get("rows");
         // Making the table
         TableView<ObservableList<String>> table = new TableView<>();
         // table.setStyle("-fx-background-color: white; -fx-border-width: 0px;"); TODO:Delete Later
@@ -134,16 +136,31 @@ public class AppFX extends Application {
         btn.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                // System.out.println(itemRow.getText());
-                // System.out.println(itemColumn.getText());
-                // System.out.println(payment.getText());
-                // prompt.setOnInputMethodTextChanged(arg0);
-                // prompt.applyCss("color: red;");
-                payment.setOpacity(100);
-                btn2.setOpacity(100);
-                paymentLabel.setOpacity(100);
-                itemRow.clear();
-                itemColumn.clear();
+                if(checkIfSelection() && isAvailable()){
+                    prompt.setText("Welcome Enter Selection");
+                    paymentLabel.setStyle("-fx-text-fill: black");
+                    prompt.setStyle("-fx-text-fill: black");
+                    // Change the payment text to show the payment for the item selected.
+                    String row = itemRow.getText();
+                    int column = Integer.valueOf(itemColumn.getText());
+                    JSONObject foundItem = findItem(row, column);
+                    Long amount = (long) foundItem.get("amount");
+                    if(amount == 0){
+                        prompt.setText("Selction is empty");
+                        prompt.setStyle("-fx-text-fill: red");
+                        return;
+                    }
+                    paymentLabel.setText(foundItem.get("name") + " is " + foundItem.get("price") );
+                    payment.setOpacity(100);
+                    btn2.setOpacity(100);
+                    paymentLabel.setOpacity(100);
+                    itemRow.clear();
+                    itemColumn.clear();    
+                }else{
+                    prompt.setText("Not a valid selection Please Try Again");
+                    prompt.setStyle("-fx-text-fill: red");
+                }
+                
             }
         });
         hb.getChildren().addAll(itemRow, itemColumn, payment,btn);
@@ -156,6 +173,26 @@ public class AppFX extends Application {
         btn2.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
+                
+                // Check if the money is good
+                String price = (String) currentObject.get("price");
+                price = price.replace("$","");
+                Double doublePrice = Double.parseDouble(price); 
+                Double doublePayment = Double.parseDouble(payment.getText()); 
+
+                Double result = doublePrice - doublePayment;
+                
+                if(!(result < 0)){
+                    String text = paymentLabel.getText();
+                    text = "Sorry not enough!! \n" + text; 
+                    paymentLabel.setText(text);
+                    paymentLabel.setStyle("-fx-text-fill: red");
+                    return; 
+                }else{
+                    System.out.println("Made here bb");
+                    prompt.setText("Your change is $" + Double.toString(result) + " Welcome Enter Selection");
+                }
+
                 payment.setOpacity(0);
                 btn2.setOpacity(0);
                 paymentLabel.setOpacity(0);
@@ -183,9 +220,6 @@ public class AppFX extends Application {
         });
         loadingHBox.getChildren().addAll(itemName, itemAmount, itemPrice, add);
         
-        // Setting up the Vbox
-        // vbox.setSpacing(5);
-        // vbox.setPadding(new Insets(10,0,0,10));
         vbox.getChildren().addAll(label, table, promptHBox,hb,paymentLabel,hb2, loadingHBoxLabel,loadingHBox);
         Scene scene = new Scene(new Group());
         // TODO make the style sheet work lol
@@ -206,6 +240,44 @@ public class AppFX extends Application {
     public static void main(String[] args) {
         launch();
     }
+
+    public static JSONObject findItem(String row, int column){
+        System.out.println("Are you Even Working"); // TODO: Delete Later
+        JSONObject r = new JSONObject();
+        // Get the item
+        for(int i = 0; i < allItems.size(); i++){
+            System.out.println("Worked"); // TODO: Delete Later
+            ObservableList<String> currentRow = allItems.get(i);
+            Boolean correctRow = currentRow.get(0).equals(row);
+            if(correctRow){
+                System.out.println("please");// TODO: Delete Later
+                String foundItem = currentRow.get(column);
+                // If the current slot is empty
+                if(foundItem.equals("")){
+                    return r;
+                }
+                String currName = "";
+                for(int z = 0; z < foundItem.length(); z++){
+                    if(!(foundItem.charAt(z) == '\n')){
+                        currName = currName + foundItem.charAt(z);
+                    }else{
+                        break;
+                    }
+                }
+
+                for(int item = 0;item < items.size(); item++){
+                    currentObject = (JSONObject) items.get(item);
+                    if(currentObject.get("name").equals(currName)){
+                        return currentObject;
+                    }
+                }
+            }
+            
+        }
+        return null;
+
+    }
+
 
     public static void addItem(){
         // Update the ArrayList
@@ -268,6 +340,35 @@ public class AppFX extends Application {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean isAvailable(){
+        int row = (int) itemRow.getText().charAt(0) - 65;
+        int col = Integer.valueOf(itemColumn.getText());
+        System.out.println(allItems.get(row).get(col).equals("")); // TODO: Delete
+        if(! allItems.get(row).get(col).equals("")){
+            return true;
+        }
+        return false;
+    }
+    public static boolean checkIfSelection(){
+        ArrayList<String> availChars = new ArrayList<String>();
+        int currentRow = 65;
+        for(int i = 0; i < rows; i++ ){
+            availChars.add(Character.toString((char) currentRow));
+            currentRow++;
+        }
+        Boolean inColumn = availChars.contains(itemRow.getText());
+        int columnToCheck = Integer.parseInt(itemColumn.getText()); 
+        Boolean isNotZero = !(columnToCheck == 0);
+        Boolean isNotNegative = columnToCheck > 0;
+        Boolean isNotBiggerThanRow = !(columnToCheck > columns);
+        Boolean inRow = (isNotZero && isNotNegative && isNotBiggerThanRow);
+        if(inColumn && inRow){
+            return true; 
+        }else{
+            return false;
+        }
     }
 
     public static void writeJSONconfig(){
