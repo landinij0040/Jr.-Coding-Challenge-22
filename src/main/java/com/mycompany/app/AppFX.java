@@ -84,7 +84,9 @@ public class AppFX extends Application {
         // Making the log file
         try {
             File logFile = new File("log.txt");
-            logFile.createNewFile();
+            if(!logFile.createNewFile()){
+                log("Vending machine started");
+            };
             
         } catch (Exception e) {
             System.out.println("Error Ocurred when making the log file");
@@ -157,7 +159,9 @@ public class AppFX extends Application {
         btn.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
+                log("User entered selction.");
                 if(checkIfSelection() && isAvailable()){
+                    log("Selection accepted.");
                     prompt.setText("Welcome Enter Selection");
                     paymentLabel.setStyle("-fx-text-fill: black");
                     prompt.setStyle("-fx-text-fill: black");
@@ -176,6 +180,7 @@ public class AppFX extends Application {
                     btn2.setOpacity(100);
                     paymentLabel.setOpacity(100);  
                 }else{
+                    log("Selection unaccepted");
                     prompt.setText("Not a valid selection Please Try Again");
                     prompt.setStyle("-fx-text-fill: red");
                 }
@@ -192,7 +197,7 @@ public class AppFX extends Application {
         btn2.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                
+                log("User inserted money");
                 // Check if the money is good
                 String price = (String) currentObject.get("price");
                 price = price.replace("$","");
@@ -202,6 +207,7 @@ public class AppFX extends Application {
                 Double result = doublePrice - doublePayment;
                 
                 if(!(result < 0)){
+                    log("Payment unaccepted");
                     String text = paymentLabel.getText();
                     text = "Sorry not enough!! \n" + text; 
                     paymentLabel.setText(text);
@@ -210,6 +216,7 @@ public class AppFX extends Application {
                 }else{
                     prompt.setText("Your change is $" + Double.toString(result) + " Welcome Enter Selection");
                 }
+                log("Payment accepted");
                 updateJSON();
                 int oldRow = ((int) itemRow.getText().charAt(0)) - 65;
                 int oldColumn = Integer.parseInt(itemColumn.getText());
@@ -254,7 +261,7 @@ public class AppFX extends Application {
             @Override
             public void handle(ActionEvent e){
                 addItem();
-                log("Adding mother fucker");
+                log("User added item");
                 table.refresh();
                 
             } 
