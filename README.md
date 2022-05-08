@@ -1,1 +1,1 @@
-#Jr. Coding Challenge 22
+# Jr. Coding Challenge 22
