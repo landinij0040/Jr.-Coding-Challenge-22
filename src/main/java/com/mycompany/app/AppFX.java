@@ -89,7 +89,6 @@ public class AppFX extends Application {
             };
             
         } catch (Exception e) {
-            System.out.println("Error Ocurred when making the log file");
             e.printStackTrace();
         }
         // Setting up the label for the vending machine
@@ -122,7 +121,6 @@ public class AppFX extends Application {
             final int finalIdx = i;
             TableColumn <ObservableList<String>,String> tc = new TableColumn<>(Integer.toString(i + 1));
             tc.setCellValueFactory(param ->{ 
-                // System.out.println(param.getValue().get(0)); 
                 return new ReadOnlyObjectWrapper(param.getValue().get(finalIdx + 1)); 
             });
             table.getColumns().add(tc);
@@ -232,11 +230,8 @@ public class AppFX extends Application {
                 }
                 oldValue = "";
                 for(int i = 0; i < oldValueArray.length; i++){
-                    System.out.println(oldValueArray[i]);
                     oldValue = oldValue + oldValueArray[i] + "\n";
                 }
-                System.out.println("In the second button");
-                System.out.println(oldValue);
                 oldItem.set(oldColumn, oldValue);
                 table.refresh();
                 payment.setOpacity(0);
@@ -429,7 +424,6 @@ public class AppFX extends Application {
             pw = new PrintWriter(bw);
             
             pw.println("[ "+ dtf.format(now) + " ] " + text);
-            System.out.println("Data Successfully appended into file");
             pw.flush();
 
         }catch(IOException io){
