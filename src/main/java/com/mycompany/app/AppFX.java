@@ -1,7 +1,6 @@
 package com.mycompany.app;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -90,7 +89,6 @@ public class AppFX extends Application {
         // setting up the table columns
         TableColumn <ObservableList<String>, String> letterColumn = new TableColumn<>("Letter");
         letterColumn.setCellValueFactory(param ->{ 
-            // System.out.println(param.getValue().get(0)); // TODO: Delete Later 
             return new ReadOnlyObjectWrapper(param.getValue().get(0)); 
         });
         table.getColumns().add(letterColumn);
@@ -153,9 +151,7 @@ public class AppFX extends Application {
                     paymentLabel.setText(foundItem.get("name") + " is " + foundItem.get("price") );
                     payment.setOpacity(100);
                     btn2.setOpacity(100);
-                    paymentLabel.setOpacity(100);
-                    itemRow.clear();
-                    itemColumn.clear();    
+                    paymentLabel.setOpacity(100);  
                 }else{
                     prompt.setText("Not a valid selection Please Try Again");
                     prompt.setStyle("-fx-text-fill: red");
@@ -189,10 +185,30 @@ public class AppFX extends Application {
                     paymentLabel.setStyle("-fx-text-fill: red");
                     return; 
                 }else{
-                    System.out.println("Made here bb");
                     prompt.setText("Your change is $" + Double.toString(result) + " Welcome Enter Selection");
                 }
+                updateJSON();
+                int oldRow = ((int) itemRow.getText().charAt(0)) - 65;
+                int oldColumn = Integer.parseInt(itemColumn.getText());
+                ObservableList<String> oldItem = allItems.get(oldRow);
+                String oldValue = oldItem.get(oldColumn);
+                String[] oldValueArray = oldValue.split("\n");
+                String[] oldAmountArray = oldValueArray[1].split(" ");
+                oldAmountArray[1] = String.valueOf( Integer.parseInt(oldAmountArray[1]) - 1 );
+                oldValueArray[1] = "";
 
+                for(int i = 0; i < oldAmountArray.length; i++){
+                    oldValueArray[1] = oldValueArray[1] + oldAmountArray[i] + " ";
+                }
+                oldValue = "";
+                for(int i = 0; i < oldValueArray.length; i++){
+                    System.out.println(oldValueArray[i]);
+                    oldValue = oldValue + oldValueArray[i] + "\n";
+                }
+                System.out.println("In the second button");
+                System.out.println(oldValue);
+                oldItem.set(oldColumn, oldValue);
+                table.refresh();
                 payment.setOpacity(0);
                 btn2.setOpacity(0);
                 paymentLabel.setOpacity(0);
@@ -219,17 +235,8 @@ public class AppFX extends Application {
             } 
         });
         loadingHBox.getChildren().addAll(itemName, itemAmount, itemPrice, add);
-        
         vbox.getChildren().addAll(label, table, promptHBox,hb,paymentLabel,hb2, loadingHBoxLabel,loadingHBox);
         Scene scene = new Scene(new Group());
-        // TODO make the style sheet work lol
-        // Adding the styling sheet
-        String cssPath = System.getProperty("user.dir") + "\\"+"src\\main\\java\\com\\mycompany\\app\\stylesheet.css";
-        // scene.getStylesheets().add("D:\\Documents\\MS3 Coding Challenge\\my-app\\src\\main\\java\\com\\mycompany\\app\\stylesheet.css");
-        // System.out.println(this.getClass().getResource("stylesheet.css"));
-        // scene.getStylesheets().add("D:/Documents/MS3 Coding Challenge/my-app/src/main/java/com/mycompany/app/stylesheet.css");
-        // scene.getStylesheets().add(".table-row-cell:empty{-fx-background-color: white;}");
-        // Adding the View Box to the scene
         ((Group) scene.getRoot()).getChildren().addAll(vbox);
         stage.setTitle("Vending Machine");
         stage.setScene(scene);
@@ -242,15 +249,12 @@ public class AppFX extends Application {
     }
 
     public static JSONObject findItem(String row, int column){
-        System.out.println("Are you Even Working"); // TODO: Delete Later
         JSONObject r = new JSONObject();
         // Get the item
         for(int i = 0; i < allItems.size(); i++){
-            System.out.println("Worked"); // TODO: Delete Later
             ObservableList<String> currentRow = allItems.get(i);
             Boolean correctRow = currentRow.get(0).equals(row);
             if(correctRow){
-                System.out.println("please");// TODO: Delete Later
                 String foundItem = currentRow.get(column);
                 // If the current slot is empty
                 if(foundItem.equals("")){
@@ -278,13 +282,17 @@ public class AppFX extends Application {
 
     }
 
+    public static void updateJSON(){
+        Long lastValue = (Long) currentObject.get("amount");
+        currentObject.replace("amount", lastValue - 1);
+        writeJSONconfig();
+    }
 
     public static void addItem(){
         // Update the ArrayList
         // Find the next available slot
         for(int i = 0; i < allItems.size(); i++){
             ObservableList<String> currentRow = allItems.get(i);
-            System.out.println(currentRow);
             for(int j = 0; j < currentRow.size(); j++){
                 if (currentRow.get(j).equals("")){
                     ObservableList<String> newRow = FXCollections.observableArrayList(currentRow);
@@ -294,7 +302,6 @@ public class AppFX extends Application {
                     String newItemAmount = itemAmount.getText();
                     if( !newItemName.equals("") && !newItemPrice.equals("") && !newItemAmount.equals("") ){
                         String newItem = newItemName + "\n" +  "amount: " + newItemAmount +  "\n" + "price: $" + newItemPrice;
-                        System.out.println(newItem); // TODO: Delete;
                         newRow.set(j, newItem);
                         currentRow.removeAll(currentRow);
                         currentRow.addAll(newRow);
@@ -331,7 +338,6 @@ public class AppFX extends Application {
             Object obj = jsonParser.parse(reader);
             employeeList = (JSONObject) obj;
             return employeeList;
-            // System.out.println(employeeList);
         }catch (FileAlreadyExistsException e){
             e.printStackTrace();
         }catch (IOException e){
@@ -345,7 +351,6 @@ public class AppFX extends Application {
     public static boolean isAvailable(){
         int row = (int) itemRow.getText().charAt(0) - 65;
         int col = Integer.valueOf(itemColumn.getText());
-        System.out.println(allItems.get(row).get(col).equals("")); // TODO: Delete
         if(! allItems.get(row).get(col).equals("")){
             return true;
         }
@@ -375,7 +380,6 @@ public class AppFX extends Application {
         try(FileWriter file = new FileWriter("src/main/java/com/mycompany/app/input.json")){
             file.write(json.toJSONString());
             file.flush();
-            System.out.println("writeJSONConfig");
         }catch(IOException e){
             e.printStackTrace();
         }
