@@ -27,7 +27,10 @@ import java.nio.file.FileAlreadyExistsException;
 // Used to Read the JSON file
 
 import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.NumberFormatException;
@@ -38,13 +41,23 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import java.util.*;
 
+//For making the time stamp
+import java.time.format.DateTimeFormatter;  
+import java.time.LocalDateTime;    
+
 public class AppFX extends Application {
+    
+    // Used for loging
+    static FileWriter fw;
+    static BufferedWriter bw;
+    static PrintWriter pw;
 
     static Long rows;
     static int columns;
     static ArrayList<ObservableList<String>> allItems = new ArrayList<ObservableList<String>>();
-    static Label loading = new Label("Enter new Item");
+    
     // For making a prompt
+    static Label loading = new Label("Enter new Item");
     static final HBox hb = new HBox();
     static final TextField itemRow = new TextField();
     static final TextField itemColumn = new TextField();
@@ -67,6 +80,16 @@ public class AppFX extends Application {
     static Label prompt;
     @Override
     public void start(Stage stage) {
+
+        // Making the log file
+        try {
+            File logFile = new File("log.txt");
+            logFile.createNewFile();
+            
+        } catch (Exception e) {
+            System.out.println("Error Ocurred when making the log file");
+            e.printStackTrace();
+        }
         // Setting up the label for the vending machine
         Label label = new Label("Vending Machine");
         label.setFont(new Font("Arial",20));
@@ -231,8 +254,11 @@ public class AppFX extends Application {
             @Override
             public void handle(ActionEvent e){
                 addItem();
+                log("Adding mother fucker");
                 table.refresh();
+                
             } 
+            
         });
         loadingHBox.getChildren().addAll(itemName, itemAmount, itemPrice, add);
         vbox.getChildren().addAll(label, table, promptHBox,hb,paymentLabel,hb2, loadingHBoxLabel,loadingHBox);
@@ -382,6 +408,35 @@ public class AppFX extends Application {
             file.flush();
         }catch(IOException e){
             e.printStackTrace();
+        }
+    }
+
+    public static void log(String text){
+            
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+        LocalDateTime now = LocalDateTime.now();     
+        
+        try {
+            fw = new FileWriter("log.txt", true);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+            
+            pw.println("[ "+ dtf.format(now) + " ] " + text);
+            System.out.println("Data Successfully appended into file");
+            pw.flush();
+
+        }catch(IOException io){
+            io.printStackTrace();
+        } 
+        finally {
+            try {
+                // pw.close();
+                bw.close();
+                fw.close();
+            } catch (IOException io) {// can't do anything }
+                io.printStackTrace();
+            }
+
         }
     }
 }
